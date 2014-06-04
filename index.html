@@ -10,25 +10,12 @@
     		font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     	}
 
-    	p {
-    		margin: 0;
-    		-webkit-margin-before: 0;
-    		-webkit-margin-after: 0;
-    	}
-
     	.shell {
-    		/*width: 100%;
-    		height: 100%;*/
     		min-height: 500px;
     		padding: 30px 60px;
     		background-color: #bfe0e2;
     		color: #505050;
-    		/*line-height: 1.6em;*/
     	}
-
-    	/*.shell p {
-    		margin: 0;
-    	}*/
 
     	#error {
     		margin-bottom: 14px;
@@ -38,12 +25,7 @@
     		font-style: italic;
     		line-height: 1.3em;
     		text-align: center;
-    		/*visibility: hidden;*/
     	}
-
-    	/*.invisible {
-    		visibility: hidden;
-    	}*/
 
     	.inputs {
     		width: 424px;
@@ -84,27 +66,8 @@
     		margin-right: 20px;
     	}
 
-    	#generate {
-    		clear: both;
-    		/*display: inline-block;*/
-    		width: 140px;
-    		margin: 0 auto;
-    		padding: 14px 0;
-    		/*background-color: #5db5b3;*/
-    		background-color: rgba(93, 181, 179,.2);
-    		color: rgba(255,255,255,.4);
-    		font-size: 2.2em;
-    		text-align: center;
-    		cursor: pointer;
-
-			-webkit-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-    	}
-
     	#polygon {
     		clear: both;
-    		/*display: inline-block;*/
     		margin: 0 auto;
     	}
 
@@ -128,7 +91,6 @@
 				<p>Number of sides</p>
 				<p>Size, in pixels</p>
 			</div>
-			<!-- <p id="generate">Generate</p> -->
 		</div>
 		<div id="polygon"></div>
 	</div>
@@ -213,12 +175,15 @@
 		.y(function(d) { return d[1]; })
 		.interpolate('linear');
 
-	var centerPoly = function(width) {
-		poly.style.width = width + 'px';
+	var rejectSelection = function(obj, field_val, error_index, id) {
+		handleValue(obj, field_val, error_index);
+		delete selection[id];
 	};
 
-	var throwError = function(index) {
-		error.textContent = errors[index];
+	var handleValue = function(obj, field_val, error_index) {
+		obj.value = field_val;
+		error.textContent = errors[error_index];
+		svg.html('');
 	};
 
 	var checkSelection = function() {
@@ -233,26 +198,22 @@
 		}
 	};
 
+	var centerPoly = function(width) {
+		poly.style.width = width + 'px';
+	};
+
 	for (var i = 0; i < inputs.length; i += 1) {
 		inputs[i].addEventListener('change', function() {
 			var id = this.id,
 				checked_val = parseInt(this.value, 10);
 
 			if (isNaN(checked_val)) {
-				this.value = '';
-				throwError(2);
-				delete selection[id];
-				svg.html('');
+				rejectSelection(this, '', 2, id);
 			} else if (checked_val < 3 && id === 'sides') {
-				this.value = '';
-				throwError(1);
-				delete selection[id];
-				svg.html('');
+				rejectSelection(this, '', 1, id);
 			} else {
-				throwError(0);
-				this.value = checked_val;
+				handleValue(this, checked_val, 0);
 				selection[id] = checked_val;
-				svg.html('');
 				checkSelection();
 			}
 		});
