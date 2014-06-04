@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+    <title>regular polygons</title>
+    <style type="text/css">
+    	body {
+    		margin: 0;
+    		font-size: 10px;
+    		font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    	}
+
+    	p {
+    		margin: 0;
+    		-webkit-margin-before: 0;
+    		-webkit-margin-after: 0;
+    	}
+
+    	.shell {
+    		/*width: 100%;
+    		height: 100%;*/
+    		min-height: 500px;
+    		padding: 30px 60px;
+    		background-color: #bfe0e2;
+    		color: #505050;
+    		/*line-height: 1.6em;*/
+    	}
+
+    	/*.shell p {
+    		margin: 0;
+    	}*/
+
+    	#error {
+    		margin-bottom: 14px;
+    		color: #f65b36;
+    		font-size: 1.4em;
+    		font-family: Georgia, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    		font-style: italic;
+    		line-height: 1.3em;
+    		text-align: center;
+    		/*visibility: hidden;*/
+    	}
+
+    	/*.invisible {
+    		visibility: hidden;
+    	}*/
+
+    	.inputs {
+    		width: 424px;
+    		margin: 0 auto;
+    	}
+
+    	input[type=text] {
+    		float: left;
+    		width: 200px;
+    		height: 60px;
+    		border: none;
+    		border-bottom: 4px solid #5db5b3;
+    		background-color: rgba(255,255,255,.6);
+    		color: inherit;
+    		font-size: 5em;;
+    		font-family: inherit;
+    		text-align: center;
+    	}
+
+    	input[type=text]:focus {
+    		outline: none;
+    	}
+
+    	input[name=sides] {
+    		margin-right: 20px;
+    	}
+
+    	.input-labels p {
+    		float: left;
+    		width: 200px;
+    		margin: 8px 0 20px 0;
+    		color: #5db5b3;
+    		font-size: 2.2em;
+    		text-align: center;
+    	}
+
+    	.input-labels p:first-child {
+    		margin-right: 20px;
+    	}
+
+    	#generate {
+    		clear: both;
+    		/*display: inline-block;*/
+    		width: 140px;
+    		margin: 0 auto;
+    		padding: 14px 0;
+    		/*background-color: #5db5b3;*/
+    		background-color: rgba(93, 181, 179,.2);
+    		color: rgba(255,255,255,.4);
+    		font-size: 2.2em;
+    		text-align: center;
+    		cursor: pointer;
+
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+    	}
+
+    	#polygon {
+    		clear: both;
+    		/*display: inline-block;*/
+    		margin: 0 auto;
+    	}
+
+    	.polygon {
+    		fill: #2f283b;
+    	}
+
+    </style>
+</head>
+<body>
+
+	<div class="shell">
+		
+		<div class="inputs">
+			<p id="error"></p>
+			<form>
+				<input type="text" id="sides" name="sides">
+				<input type="text" id="size" name="size">
+			</form>
+			<div class="input-labels">
+				<p>Number of sides</p>
+				<p>Size, in pixels</p>
+			</div>
+			<!-- <p id="generate">Generate</p> -->
+		</div>
+		<div id="polygon"></div>
+	</div>
+
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script type="text/javascript">
+
+	var poly = document.getElementById('polygon'),
+		svg = d3.select('#polygon').append('svg'),
+		inputs = document.getElementsByTagName('input'),
+		error = document.getElementById('error'),
+		selection = {},
+		errors = [
+			'',
+			'more than two sides, please.',
+			'numbers only, please. no funny business',
+			'might as well just be a circle, eh?'
+		];
+
+	var makePolygon = function(num_sides) {
+		var returned = function(polygon_size) {
+			drawPolygon(num_sides, polygon_size);
+		};
+		return returned;
+	};
+
+	var drawPolygon = function(sides, size) {
+		var r = size / 2,
+			c = [r, r],
+			a = 360 / sides,
+			vertices = getVertices(sides, a, r);
+
+		svg.attr('width', size)
+			.attr('height', size)
+			.append('g');
+
+		svg.append('path')
+			.datum(vertices)
+			.attr('class', 'polygon')
+			.attr('d', line);
+	};
+
+	var getVertices = function(sides, angle, radius) {
+		var v = [],
+			closure;
+
+		for (var i = 0; i < sides; i += 1) {
+			var this_angle = angle * i,
+				radian = convertToRadians(this_angle),
+				x_coord = getXCoord(radian, radius) + radius,
+				y_coord = getYCoord(radian, radius) + radius,
+				coord = [x_coord, y_coord];
+
+			v.push(coord);
+		}
+
+		closure = v[0];
+		v.push(closure);
+
+		return v;
+	};
+
+	var convertToRadians = function(degrees) {
+		var radians = (degrees * Math.PI) / 180;
+		return radians;
+	};
+
+	var getXCoord = function(angle, radius) {
+		var coord = Math.cos(angle) * radius,
+			coord_round = Math.round(coord);
+		return coord_round;
+	};
+
+	var getYCoord = function(angle, radius) {
+		var coord = Math.sin(angle) * radius,
+			coord_round = Math.round(coord);
+		return coord_round;
+	};
+
+	var line = d3.svg.line()
+		.x(function(d) { return d[0]; })
+		.y(function(d) { return d[1]; })
+		.interpolate('linear');
+
+	var centerPoly = function(width) {
+		poly.style.width = width + 'px';
+	};
+
+	var throwError = function(index) {
+		error.textContent = errors[index];
+	};
+
+	var checkSelection = function() {
+		var counter = 0;
+		for (var key in selection) {
+			counter += 1;
+		}
+		if (counter === 2) {
+			var poly = makePolygon(selection.sides);
+			poly(selection.size);
+			centerPoly(selection.size);
+		}
+	};
+
+	for (var i = 0; i < inputs.length; i += 1) {
+		inputs[i].addEventListener('change', function() {
+			var id = this.id,
+				checked_val = parseInt(this.value, 10);
+
+			if (isNaN(checked_val)) {
+				this.value = '';
+				throwError(2);
+				delete selection[id];
+				svg.html('');
+			} else if (checked_val < 3 && id === 'sides') {
+				this.value = '';
+				throwError(1);
+				delete selection[id];
+				svg.html('');
+			} else {
+				throwError(0);
+				this.value = checked_val;
+				selection[id] = checked_val;
+				svg.html('');
+				checkSelection();
+			}
+		});
+	}
+
+
+	</script>
+
+</body>
+</html>
