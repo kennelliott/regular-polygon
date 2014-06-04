@@ -18,7 +18,8 @@
     	}
 
     	#error {
-    		margin-bottom: 14px;
+    		height: 18px;
+    		margin: 0 0 14px 0;
     		color: #f65b36;
     		font-size: 1.4em;
     		font-family: Georgia, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -106,8 +107,7 @@
 		errors = [
 			'',
 			'more than two sides, please.',
-			'numbers only, please. no funny business',
-			'might as well just be a circle, eh?'
+			'numbers only, please. no funny business'
 		];
 
 	var makePolygon = function(num_sides) {
@@ -192,9 +192,11 @@
 			counter += 1;
 		}
 		if (counter === 2) {
-			var poly = makePolygon(selection.sides);
-			poly(selection.size);
-			centerPoly(selection.size);
+			var sides = selection.sides,
+				size = selection.size,
+				poly = makePolygon(sides);
+			poly(size);
+			centerPoly(size);
 		}
 	};
 
