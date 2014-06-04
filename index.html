@@ -30,7 +30,7 @@
 
     	.inputs {
     		width: 424px;
-    		margin: 0 auto;
+    		margin: 0 auto 30px auto;
     	}
 
     	input[type=text] {
@@ -67,13 +67,32 @@
     		margin-right: 20px;
     	}
 
+    	#pie {
+    		clear: both;
+    		width: 140px;
+    		margin: 0 auto;
+    		padding: 8px 0;
+    		background-color: #5db5b3;
+    		color: #ffffff;
+    		font-size: 1.4em;
+    		text-align: center;
+    		cursor: pointer;
+    		visibility: hidden;
+    	}
+
     	#polygon {
     		clear: both;
     		margin: 0 auto;
     	}
 
-    	.polygon {
+    	.path-polygon {
     		fill: #2f283b;
+    	}
+
+    	.path-pie {
+    		fill: none;
+    		stroke: #bfe0e2;
+    		stroke-width: 2;
     	}
 
     </style>
@@ -89,9 +108,10 @@
 				<input type="text" id="size" name="size">
 			</form>
 			<div class="input-labels">
-				<p>Number of sides</p>
-				<p>Size, in pixels</p>
+				<p>number of sides</p>
+				<p>size, in pixels</p>
 			</div>
+			<p id="pie">make me a pie</p>
 		</div>
 		<div id="polygon"></div>
 	</div>
@@ -103,12 +123,19 @@
 		svg = d3.select('#polygon').append('svg'),
 		inputs = document.getElementsByTagName('input'),
 		error = document.getElementById('error'),
+		pie = document.getElementById('pie'),
+		vertices,
 		selection = {},
 		errors = [
 			'',
 			'more than two sides, please.',
 			'numbers only, please. no funny business'
 		];
+
+	var line = d3.svg.line()
+		.x(function(d) { return d[0]; })
+		.y(function(d) { return d[1]; })
+		.interpolate('linear');
 
 	var makePolygon = function(num_sides) {
 		var returned = function(polygon_size) {
@@ -120,8 +147,9 @@
 	var drawPolygon = function(sides, size) {
 		var r = size / 2,
 			c = [r, r],
-			a = 360 / sides,
-			vertices = getVertices(sides, a, r);
+			a = 360 / sides;
+
+		vertices = getVertices(sides, a, r);
 
 		svg.attr('width', size)
 			.attr('height', size)
@@ -129,7 +157,7 @@
 
 		svg.append('path')
 			.datum(vertices)
-			.attr('class', 'polygon')
+			.attr('class', 'path-polygon')
 			.attr('d', line);
 	};
 
@@ -170,11 +198,6 @@
 		return coord_round;
 	};
 
-	var line = d3.svg.line()
-		.x(function(d) { return d[0]; })
-		.y(function(d) { return d[1]; })
-		.interpolate('linear');
-
 	var rejectSelection = function(obj, field_val, error_index, id) {
 		handleValue(obj, field_val, error_index);
 		delete selection[id];
@@ -195,6 +218,7 @@
 			var sides = selection.sides,
 				size = selection.size,
 				poly = makePolygon(sides);
+			pie.style.visibility = 'visible';
 			poly(size);
 			centerPoly(size);
 		}
@@ -220,6 +244,20 @@
 			}
 		});
 	}
+
+	document.getElementById('pie')
+		.addEventListener('click', function() {
+			var v = vertices.slice(0, -1);
+			v.forEach(function(d, i) {
+				var w = selection.size,
+					r = w / 2,
+					coords = [[r, r], d];
+				svg.append('path')
+					.datum(coords)
+					.attr('class', 'path-pie')
+					.attr('d', line);
+			});
+		});
 
 
 	</script>
